@@ -27,6 +27,34 @@ class AerostatFolders():
             res.append(page.parse())
         return res
 
+    def parse_tags(self):
+        res = []
+        for file in self.get_all_files():
+            print(file)
+            page = ParsePage(file)
+            number = page.release_number()
+            tags = page.tags()
+            res.append({'number': number,
+                        'tags': tags}
+                       )
+        return sorted(res, key=lambda p: int(p['number']))
+
+    def write_tags(self, fname):
+        with open(fname, 'w') as f:
+            for tag_item in self.parse_tags():
+                f.write('#{}\n'.format(tag_item['number']))
+                for tag in tag_item['tags']:
+                    f.write('{}\n'.format(tag))
+                f.write('\n')
+
+    def write_tag_list(self, fname):
+        tag_list = []
+        with open(fname, 'w') as f:
+            for tag_item in self.parse_tags():
+                tag_list.extend(tag_item['tags'])
+            for tag in sorted(tag_list):
+                f.write('{}\n'.format(tag))
+
 
 class ParsePage():
 
@@ -72,6 +100,10 @@ class ParsePage():
                     pass
         res.append(l)
         return res
+
+    def tags(self):
+        return [tag.text_content() for tag in self.soup.find_class('tag')]
+
 
     def parse(self):
         return {
